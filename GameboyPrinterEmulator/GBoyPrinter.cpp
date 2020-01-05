@@ -47,7 +47,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 bool GBoyPrinter::ClockHigh_MagicBytesCheck(int in)
 {
 	history.push_back(in);
-	if (history.size > historyMax) {
+	if (history.size() > historyMax) {
 		history.erase(history.begin());
 	}
 
