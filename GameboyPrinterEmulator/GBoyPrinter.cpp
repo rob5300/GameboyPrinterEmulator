@@ -33,10 +33,6 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 			}
 		}
 
-
-		/*while (true) {
-			
-		}*/
 	}
 	else {
 		std::cout << "Failed to start gpio!" << std::endl;
@@ -52,9 +48,17 @@ bool GBoyPrinter::ClockHigh_MagicBytesCheck(int in)
 	}
 
 	//Check contents of history for magic bytes
-	if (history == MagicBytesCompare) {
-		std::cout << "Magic Bytes read!";
-		return true;
+	if(history.size() == historyMax){
+		int matches = 0;
+		for (size_t i = 0; i < history.size(); i++)
+		{
+			if(history[i] == MagicBytesCompare[i]) matches++;
+			else return false;
+		}
+		if (matches == historyMax) {
+			std::cout << "Magic Bytes read!";
+			return true;
+		}
 	}
 
 	return false;
