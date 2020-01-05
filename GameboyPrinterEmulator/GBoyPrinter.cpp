@@ -24,7 +24,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 				lastClockRead = clockpinread;
 				if (clockpinread == 1)
 				{
-					if(inpinread == 1) std::cout << "In pin was 1!" << std::endl;
+					//if(inpinread == 1) std::cout << "In pin was 1!" << std::endl;
 					if (ClockHigh_MagicBytesCheck(inpinread)) {
 						history.clear();
 						break;

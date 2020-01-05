@@ -20,7 +20,7 @@ class GBoyPrinter
 		//0x33, 51
 		//These are backwards due to backwards input
 		std::vector<int> MagicBytesCompare{
-			0,0,0,1,0,0,0,1, 
-			1,1,0,0,1,1,0,0
+			1,0,0,0,1,0,0,0, 
+			0,0,1,1,0,0,1,1
 		};
 };
