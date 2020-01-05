@@ -18,9 +18,25 @@ int main(int argc, char* argv[])
 		gpioSetMode(in, PI_INPUT);
 		gpioSetMode(out, PI_OUTPUT);
 
+		int lastClockRead = 0;
+		int lastInRead = 0;
+
 		while (true) {
+			std::cout << "Reading pins...";
 			int clockpinread = gpioRead(clockpin);
-			std::cout << clockpinread << std::endl;
+			int inpinread = gpioRead(in);
+
+			if (clockpinread != lastClockRead) {
+				std::cout << "Clockpin: " << clockpinread << std::endl;
+				lastClockRead = clockpinread;
+			}
+
+			if (inpinread != lastInRead) {
+				std::cout << "InRead: " << inpinread << std::endl;
+				lastInRead = inpinread;
+			}
+
+
 		}
 	}
 	else {
