@@ -21,14 +21,6 @@ int main(int argc, char* argv[])
 		while (true) {
 			int clockpinread = gpioRead(clockpin);
 			std::cout << clockpinread << std::endl;
-
-			//Soo we can break out.
-			std::string input;
-			std::cin >> input;
-			if(input == "c")
-			{
-				break;
-			}
 		}
 	}
 	else {
