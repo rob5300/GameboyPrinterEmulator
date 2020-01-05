@@ -20,9 +20,10 @@ int main(int argc, char* argv[])
 
 		int lastClockRead = 0;
 		int lastInRead = 0;
+		std::cout << "Reading pins...";
 
 		while (true) {
-			std::cout << "Reading pins...";
+			
 			int clockpinread = gpioRead(clockpin);
 			int inpinread = gpioRead(in);
 
