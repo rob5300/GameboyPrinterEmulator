@@ -29,6 +29,8 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 				if (clockpinread != lastClockRead) {
 					lastClockRead = clockpinread;
 
+					if(clockpinread == 0) continue;
+
 					std::cout << "[" << count << "] " << "In pin was: " << inpinread << " | Clock pin was: " << clockpinread << std::endl;
 					if (ClockHigh_MagicBytesCheck(inpinread)) {
 						history.clear();
