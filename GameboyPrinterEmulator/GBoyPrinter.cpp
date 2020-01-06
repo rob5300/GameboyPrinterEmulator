@@ -1,47 +1,44 @@
 #include "GBoyPrinter.h"
 
 GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
-{
+{	//17,22,27
 	if (gpioInitialise() >= 0)
 	{
 		std::cout << "Start!" << std::endl;
 
-		gpioSetMode(clockpin, PI_INPUT);
-		gpioSetMode(in, PI_INPUT);
-		gpioSetMode(out, PI_OUTPUT);
+		gpioSetMode(clockpin, PI_INPUT);//17
+		gpioSetMode(in, PI_INPUT);//22
+		gpioSetMode(out, PI_OUTPUT);//27
 		while(true){
 			int lastClockRead = 0;
 			int lastInRead = 0;
-			std::cout << "Press enter to begin recording for 0.5 seconds." << std::endl;
+			std::cout << "### Press enter how long im ms to run for! ###" << std::endl;
 
 			std::string a;
 			std::cin >> a;
 
+			double timeframe = std::stod(a);
+
 			//Loop to check for magic bytes to begin.
 			std::chrono::time_point<std::chrono::high_resolution_clock> begin = std::chrono::high_resolution_clock::now();
 			unsigned count = 0;
-			while (CountSeconds(begin) < 500){
+			while (CountSeconds(begin) < timeframe){
 				int clockpinread = gpioRead(clockpin);
 				int inpinread = gpioRead(in);
 
 				if (clockpinread != lastClockRead) {
 					lastClockRead = clockpinread;
-					if (clockpinread != 0)
-					{
-						std::cout << "[" << count << "] " << "In pin was " << inpinread << std::endl;
-						if (ClockHigh_MagicBytesCheck(inpinread)) {
-							history.clear();
-							break;
-						}
-						//Magic bytes not found, do nothing.
+
+					std::cout << "[" << count << "] " << "In pin was: " << inpinread << " | Clock pin was: " << clockpinread << std::endl;
+					if (ClockHigh_MagicBytesCheck(inpinread)) {
+						history.clear();
+						break;
 					}
+					//Magic bytes not found, do nothing.
 				}
 				count++;
 			}
-			std::cout << "Finished reading! Press enter to restart" << std::endl;
-			std::string b;
-			std::cin >> b;
-			std::cout.clear();
+			std::cout << "### Finished reading! ###" << std::endl;
 		}
 	}
 	else {
