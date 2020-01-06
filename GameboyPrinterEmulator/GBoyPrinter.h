@@ -36,5 +36,5 @@ class GBoyPrinter
 
 		//State Methods
 		void PrinterCommandState(std::vector<int>* data);
-		void PacketDataLength(std::vector<int>* data);
+		void PacketDataLengthState(std::vector<int>* data);
 };
