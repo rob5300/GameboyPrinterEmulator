@@ -35,8 +35,9 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 						break;
 					}
 					//Magic bytes not found, do nothing.
+					count++;
 				}
-				count++;
+				
 			}
 			std::cout << "### Finished reading! ###" << std::endl;
 		}
