@@ -4,52 +4,175 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 {	//17,22,27
 	if (gpioInitialise() >= 0)
 	{
-		std::cout << "Start!" << std::endl;
+		Print("GameBoy Printer Emulator Start!");
 
 		gpioSetMode(clockpin, PI_INPUT);//17
 		gpioSetMode(in, PI_INPUT);//22
 		gpioSetMode(out, PI_OUTPUT);//27
+
+		bool magicBytesFound = false;
+		state = PrinterCommand;
+
 		while(true){
 			int lastClockRead = 0;
 			int lastInRead = 0;
-			std::cout << "### Press enter how long im ms to run for! ###" << std::endl;
 
-			std::string a;
-			std::cin >> a;
+			int bytesRead = 0;
 
-			double timeframe = std::stod(a);
+			int bitsLeft = ByteLength;
 
-			//Loop to check for magic bytes to begin.
-			std::chrono::time_point<std::chrono::high_resolution_clock> begin = std::chrono::high_resolution_clock::now();
-			unsigned count = 0;
-			while (CountSeconds(begin) < timeframe){
+			std::vector<int> readBytesBuffer;
+			unsigned int currentByteBuffer;
+						
+			while (true)
+			{
 				int clockpinread = gpioRead(clockpin);
 				int inpinread = gpioRead(in);
 
-				if (clockpinread != lastClockRead) {
+				//Keep checking the clock pin and only execute if the pin changes state.
+				if (clockpinread != lastClockRead)
+				{
 					lastClockRead = clockpinread;
+					//If the pin state is not 0 then we can react to the current input value.
+					if (clockpinread == 0) continue;
 
-					if(clockpinread == 0) continue;
+					if(!magicBytesFound)
+					{
+						//Keep looking for the magic bytes that signals the start of data from the Gameboy Camera.
+						std::cout << "In pin was: " << inpinread << std::endl;
+						magicBytesFound = ClockHigh_MagicBytesCheck(inpinread);
 
-					std::cout << "[" << count << "] " << "In pin was: " << inpinread << " | Clock pin was: " << clockpinread << std::endl;
-					if (ClockHigh_MagicBytesCheck(inpinread)) {
-						history.clear();
-						break;
+						if (magicBytesFound) {
+							//Prepare to read 1 byte for the PrinterCommand state.
+							bytesToRead = 1;
+							bitsLeft = ByteLength;
+							bytesRead = 0;
+						}
 					}
-					//Magic bytes not found, do nothing.
-					count++;
+					else
+					{
+						//Magic bytes were found soo keep reading bits, create int's out of them and give data to states.
+						if (bitsLeft > 0)
+						{
+							//Add and left shift in the bits read, when we finish we should have an 8bit number in an unsigned int.
+							currentByteBuffer += inpinread;
+							bitsLeft--;
+							if(bitsLeft > 0) currentByteBuffer << 1;
+							else
+							{
+								//We have read a whole byte!
+								readBytesBuffer.push_back(currentByteBuffer);
+								bytesRead++;
+								if (bytesRead == bytesToRead)
+								{
+									//Send all the bytes read to be processed.
+									ProcessBufferForState(&state, &readBytesBuffer);
+								}
+								else
+								{
+									//Reset for reading another byte
+									currentByteBuffer = 0;
+									bitsLeft = ByteLength;
+								}
+							}
+						}
+					}
 				}
-				
 			}
-			std::cout << "### Finished reading! ###" << std::endl;
 		}
 	}
 	else {
-		std::cout << "Failed to start gpio!" << std::endl;
+		Print("Failed to start gpio!");
 	}
 }
 
-//Called when the clock goes high
+//React to the recieved data depending on the current state.
+void GBoyPrinter::ProcessBufferForState(PrinterState* state, std::vector<int>* data)
+{
+	switch (*state)
+	{
+		case PrinterCommand:
+			PrinterCommandState(data);
+			break;
+		case CompressionFlag:
+			
+			break;
+		case PacketDataLength:
+			PacketDataLengthState(data);
+			break;
+		case PacketData:
+			
+			break;
+		case PacketChecksum:
+			
+			break;
+		case Keepalive:
+			
+			break;
+		case CurrentPrinterStatus:
+			
+			break;
+	}
+}
+
+//Print to the standard output.
+void GBoyPrinter::Print(std::string toPrint)
+{
+	//Exists as I hate writing this...
+	std::cout << toPrint << std::endl;
+}
+
+//Process the data for the PrinterCommand state.
+void GBoyPrinter::PrinterCommandState(std::vector<int>* data)
+{
+	int command = (*data)[0];
+	switch (command) {
+		case 1:
+			//Buffer Clear
+			Print("PrinterCommand: Buffer Clear");
+			mainBuffer.clear();
+			bytesToRead = 1;
+			//Stay on the command state.
+			break;
+		case 2:
+			//Print
+			Print("PrinterCommand: Print");
+			//Try to print the data?
+			state = PacketDataLength;
+			bytesToRead = 2;
+			break;
+		case 4:
+			//Dot data send
+			Print("PrinterCommand: DotData send");
+			//We are gonna get dot data!.
+			break;
+		case 16:
+			//Status reply
+			Print("PrinterCommand: Status Reply");
+			//Gameboy wants our status, lets reply with it.
+			break;
+		default:
+			Print("Unknown command for printer command state: " + command);
+			exit(EXIT_FAILURE);
+	}
+}
+
+void GBoyPrinter::PacketDataLengthState(std::vector<int>* data)
+{
+	Print("PacketDataLength.");
+	//Then the 2 data bytes into a 16 bit number and reverse its bits.
+	unsigned int packetLength = 0;
+	for (size_t i = 0; i < 2; i++)
+	{
+		for (size_t i = 0; i < 8; i++)
+		{
+			packetLength << 1;
+			packetLength += 
+		}
+	}
+}
+
+//Input this input to the history and also check for the magic bytes.
 bool GBoyPrinter::ClockHigh_MagicBytesCheck(int in)
 {
 	history.push_back(in);
@@ -66,7 +189,7 @@ bool GBoyPrinter::ClockHigh_MagicBytesCheck(int in)
 			if(history[i] == MagicBytesCompare[i]) matches++;
 		}
 		if (matches == historyMax) {
-			std::cout << "Magic Bytes read!";
+			Print("Magic Bytes read!");
 			return true;
 		}
 	}
