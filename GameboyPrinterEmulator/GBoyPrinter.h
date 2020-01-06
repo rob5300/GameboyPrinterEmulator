@@ -22,13 +22,7 @@ class GBoyPrinter
 		//0x33, 51
 		//These are backwards due to msb first
 		std::vector<int> MagicBytesCompare{
-			0,0,0,1,0,0,0,1, 
-			1,1,0,0,1,1,0,0
-		};
-
-		//0x33 then 0x88
-		std::vector<int> MagicBytesCompareBackwards{
-			1,1,0,0,1,1,0,0,
-			0,0,0,1,0,0,0,1
+			1,0,0,0,1,0,0,0,
+			0,0,1,1,0,0,1,1
 		};
 };

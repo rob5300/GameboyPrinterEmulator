@@ -60,19 +60,13 @@ bool GBoyPrinter::ClockHigh_MagicBytesCheck(int in)
 	//Check contents of history for magic bytes
 	if(history.size() == historyMax){
 		int matches = 0;
-		int matches2 = 0;
+
 		for (size_t i = 0; i < history.size(); i++)
 		{
 			if(history[i] == MagicBytesCompare[i]) matches++;
-			if (history[i] == MagicBytesCompareBackwards[i]) matches2++;
 		}
 		if (matches == historyMax) {
 			std::cout << "Magic Bytes read!";
-			return true;
-		}
-
-		if (matches2 == historyMax) {
-			std::cout << "Magic Bytes read for backwards!";
 			return true;
 		}
 	}
