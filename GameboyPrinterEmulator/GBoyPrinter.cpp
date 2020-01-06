@@ -9,31 +9,40 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 		gpioSetMode(clockpin, PI_INPUT);
 		gpioSetMode(in, PI_INPUT);
 		gpioSetMode(out, PI_OUTPUT);
+		while(true){
+			int lastClockRead = 0;
+			int lastInRead = 0;
+			std::cout << "Press enter to begin recording for 0.5 seconds." << std::endl;
 
-		int lastClockRead = 0;
-		int lastInRead = 0;
-		std::cout << "Reading pins..." << std::endl;
+			std::string a;
+			std::cin >> a;
 
-		//Loop to check for magic bytes to begin.
-		while (true) {
+			//Loop to check for magic bytes to begin.
+			std::chrono::time_point begin = std::chrono::high_resolution_clock::now();
+			unsigned count = 0;
+			while (CountSeconds(begin) < 500){
+				int clockpinread = gpioRead(clockpin);
+				int inpinread = gpioRead(in);
 
-			int clockpinread = gpioRead(clockpin);
-			int inpinread = gpioRead(in);
-
-			if (clockpinread != lastClockRead) {
-				lastClockRead = clockpinread;
-				if (clockpinread == 1)
-				{
-					//if(inpinread == 1) std::cout << "In pin was 1!" << std::endl;
-					if (ClockHigh_MagicBytesCheck(inpinread)) {
-						history.clear();
-						break;
+				if (clockpinread != lastClockRead) {
+					lastClockRead = clockpinread;
+					if (clockpinread != 0)
+					{
+						std::cout << "[" << count << "] " << "In pin was " << inpinread << std::endl;
+						if (ClockHigh_MagicBytesCheck(inpinread)) {
+							history.clear();
+							break;
+						}
+						//Magic bytes not found, do nothing.
 					}
-					//Magic bytes not found, do nothing.
 				}
+				count++;
 			}
+			std::cout << "Finished reading! Press enter to restart" << std::endl;
+			std::string a;
+			std::cin >> a;
+			std::cout.clear();
 		}
-
 	}
 	else {
 		std::cout << "Failed to start gpio!" << std::endl;
@@ -69,4 +78,10 @@ bool GBoyPrinter::ClockHigh_MagicBytesCheck(int in)
 	}
 
 	return false;
+}
+
+double GBoyPrinter::CountSeconds(std::chrono::time_point<std::chrono::high_resolution_clock> begin)
+{
+	std::chrono::duration<double, std::milli> seconds = std::chrono::high_resolution_clock::now() - begin;
+	return seconds.count;
 }

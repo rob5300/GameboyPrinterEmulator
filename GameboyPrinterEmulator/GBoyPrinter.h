@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <pigpio.h>
+#include <chrono>
 
 class GBoyPrinter
 {
@@ -12,6 +13,7 @@ class GBoyPrinter
 
 	private:
 		bool ClockHigh_MagicBytesCheck(int in);
+		double CountSeconds(std::chrono::time_point<std::chrono::high_resolution_clock> begin);
 
 		std::vector<int> history;
 		int historyMax = 16;
