@@ -95,7 +95,7 @@ void GBoyPrinter::ProcessBufferForState(PrinterState* state, std::vector<int>* d
 			PrinterCommandState(data);
 			break;
 		case CompressionFlag:
-			
+			CompressionFlagState(data);
 			break;
 		case PacketDataLength:
 			PacketDataLengthState(data);
@@ -115,13 +115,6 @@ void GBoyPrinter::ProcessBufferForState(PrinterState* state, std::vector<int>* d
 	}
 }
 
-//Print to the standard output.
-void GBoyPrinter::Print(std::string toPrint)
-{
-	//Exists as I hate writing this...
-	std::cout << toPrint << std::endl;
-}
-
 //Process the data for the PrinterCommand state.
 void GBoyPrinter::PrinterCommandState(std::vector<int>* data)
 {
@@ -131,15 +124,10 @@ void GBoyPrinter::PrinterCommandState(std::vector<int>* data)
 			//Buffer Clear
 			Print("PrinterCommand: Buffer Clear");
 			mainBuffer.clear();
-			bytesToRead = 1;
-			//Stay on the command state.
 			break;
 		case 2:
 			//Print
 			Print("PrinterCommand: Print");
-			//Try to print the data?
-			state = PacketDataLength;
-			bytesToRead = 2;
 			break;
 		case 4:
 			//Dot data send
@@ -155,21 +143,49 @@ void GBoyPrinter::PrinterCommandState(std::vector<int>* data)
 			Print("Unknown command for printer command state: " + command);
 			exit(EXIT_FAILURE);
 	}
+	//Advance to next state.
+	state = CompressionFlag;
+	bytesToRead = 1;
 }
 
 void GBoyPrinter::PacketDataLengthState(std::vector<int>* data)
 {
 	Print("PacketDataLength.");
 	//Then the 2 data bytes into a 16 bit number and reverse its bits.
-	/*unsigned int packetLength = 0;
-	for (size_t i = 0; i < 2; i++)
-	{
-		for (size_t i = 0; i < 8; i++)
-		{
-			packetLength << 1;
-			packetLength += 
-		}
-	}*/
+	uint16_t packetLength = 0;
+	packetLength += (*data)[0];
+	packetLength << 8;
+	packetLength += (*data)[1];
+	//Reverse the bytes order
+	//TODO: Use this to help shift in the bytes to a new int16 but in the opposite order.
+	//https://stackoverflow.com/questions/3916097/integer-byte-swapping-in-c
+}
+
+void GBoyPrinter::CompressionFlagState(std::vector<int>* data)
+{
+	compressionFlag = (*data)[0];
+	state = PacketDataLength;
+	bytesToRead = 2;
+}
+
+void GBoyPrinter::PacketDataState(std::vector<int>* data)
+{
+	
+}
+
+void GBoyPrinter::PacketChecksumState(std::vector<int>* data)
+{
+	
+}
+
+void GBoyPrinter::KeepaliveState(std::vector<int>* data)
+{
+	
+}
+
+void GBoyPrinter::CurrentPrinterStatusState(std::vector<int>* data)
+{
+	
 }
 
 //Input this input to the history and also check for the magic bytes.
@@ -201,4 +217,11 @@ double GBoyPrinter::CountSeconds(std::chrono::time_point<std::chrono::high_resol
 {
 	std::chrono::duration<double, std::milli> seconds = std::chrono::high_resolution_clock::now() - begin;
 	return seconds.count();
+}
+
+//Print to the standard output.
+void GBoyPrinter::Print(std::string toPrint)
+{
+	//Exists as I hate writing this...
+	std::cout << toPrint << std::endl;
 }

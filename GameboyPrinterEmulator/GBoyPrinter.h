@@ -37,4 +37,9 @@ class GBoyPrinter
 		//State Methods
 		void PrinterCommandState(std::vector<int>* data);
 		void PacketDataLengthState(std::vector<int>* data);
+		void CompressionFlagState(std::vector<int>* data);
+		void PacketDataState(std::vector<int>* data);
+		void PacketChecksumState(std::vector<int>* data);
+		void KeepaliveState(std::vector<int>* data);
+		void CurrentPrinterStatusState(std::vector<int>* data);
 };
