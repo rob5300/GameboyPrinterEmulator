@@ -18,7 +18,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 			std::cin >> a;
 
 			//Loop to check for magic bytes to begin.
-			std::chrono::time_point begin = std::chrono::high_resolution_clock::now();
+			std::chrono::time_point<std::chrono::high_resolution_clock> begin = std::chrono::high_resolution_clock::now();
 			unsigned count = 0;
 			while (CountSeconds(begin) < 500){
 				int clockpinread = gpioRead(clockpin);
