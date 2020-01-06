@@ -39,8 +39,8 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 				count++;
 			}
 			std::cout << "Finished reading! Press enter to restart" << std::endl;
-			std::string a;
-			std::cin >> a;
+			std::string b;
+			std::cin >> b;
 			std::cout.clear();
 		}
 	}
@@ -83,5 +83,5 @@ bool GBoyPrinter::ClockHigh_MagicBytesCheck(int in)
 double GBoyPrinter::CountSeconds(std::chrono::time_point<std::chrono::high_resolution_clock> begin)
 {
 	std::chrono::duration<double, std::milli> seconds = std::chrono::high_resolution_clock::now() - begin;
-	return seconds.count;
+	return seconds.count();
 }
