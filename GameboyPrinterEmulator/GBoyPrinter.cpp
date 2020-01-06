@@ -161,7 +161,7 @@ void GBoyPrinter::PacketDataLengthState(std::vector<int>* data)
 {
 	Print("PacketDataLength.");
 	//Then the 2 data bytes into a 16 bit number and reverse its bits.
-	unsigned int packetLength = 0;
+	/*unsigned int packetLength = 0;
 	for (size_t i = 0; i < 2; i++)
 	{
 		for (size_t i = 0; i < 8; i++)
@@ -169,7 +169,7 @@ void GBoyPrinter::PacketDataLengthState(std::vector<int>* data)
 			packetLength << 1;
 			packetLength += 
 		}
-	}
+	}*/
 }
 
 //Input this input to the history and also check for the magic bytes.
