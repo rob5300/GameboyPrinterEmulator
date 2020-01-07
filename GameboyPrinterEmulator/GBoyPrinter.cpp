@@ -66,7 +66,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 								if (bytesRead == bytesToRead)
 								{
 									//Send all the bytes read to be processed.
-									ProcessBufferForState(&state, &readBytesBuffer);
+									ProcessBufferForState(state, readBytesBuffer);
 								}
 								else
 								{
@@ -74,6 +74,16 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 									currentByteBuffer = 0;
 									bitsLeft = ByteLength;
 								}
+							}
+
+							//Send any bits if we have any
+							if (outputBuffer.size() != 0)
+							{
+								gpioWrite(out, outputBuffer[0]);
+								outputBuffer.erase(outputBuffer.begin());
+							}
+							else {
+								gpioWrite(out, 0);
 							}
 						}
 					}
@@ -87,9 +97,9 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 }
 
 //React to the recieved data depending on the current state.
-void GBoyPrinter::ProcessBufferForState(PrinterState* state, std::vector<int>* data)
+void GBoyPrinter::ProcessBufferForState(PrinterState& state, std::vector<int>& data)
 {
-	switch (*state)
+	switch (state)
 	{
 		case PrinterCommand:
 			PrinterCommandState(data);
@@ -101,24 +111,24 @@ void GBoyPrinter::ProcessBufferForState(PrinterState* state, std::vector<int>* d
 			PacketDataLengthState(data);
 			break;
 		case PacketData:
-			
+			PacketDataState(data);
 			break;
 		case PacketChecksum:
-			
+			PacketChecksumState(data);
 			break;
 		case Keepalive:
-			
+			KeepaliveState(data);
 			break;
 		case CurrentPrinterStatus:
-			
+			CurrentPrinterStatusState(data);
 			break;
 	}
 }
 
 //Process the data for the PrinterCommand state.
-void GBoyPrinter::PrinterCommandState(std::vector<int>* data)
+void GBoyPrinter::PrinterCommandState(std::vector<int>& data)
 {
-	int command = (*data)[0];
+	int command = data[0];
 	switch (command) {
 		case 1:
 			//Buffer Clear
@@ -148,44 +158,56 @@ void GBoyPrinter::PrinterCommandState(std::vector<int>* data)
 	bytesToRead = 1;
 }
 
-void GBoyPrinter::PacketDataLengthState(std::vector<int>* data)
+void GBoyPrinter::PacketDataLengthState(std::vector<int>& data)
 {
 	Print("PacketDataLength.");
 	//Then the 2 data bytes into a 16 bit number and reverse its bits.
 	uint16_t packetLength = 0;
-	packetLength += (*data)[0];
+	packetLength += data[0];
 	packetLength << 8;
-	packetLength += (*data)[1];
-	//Reverse the bytes order
-	//TODO: Use this to help shift in the bytes to a new int16 but in the opposite order.
-	//https://stackoverflow.com/questions/3916097/integer-byte-swapping-in-c
+	packetLength += data[1];
+
+	dataPacketLength = reverseBits(packetLength);
+	Print("Packet Length Read and reversed to be: " + dataPacketLength);
+	if (dataPacketLength != 0) {
+		state = PacketData;
+		bytesToRead = dataPacketLength;
+	}
+	else
+	{
+		//Skip the data packet part?
+		state = PacketChecksum;
+	}
 }
 
-void GBoyPrinter::CompressionFlagState(std::vector<int>* data)
+void GBoyPrinter::CompressionFlagState(std::vector<int>& data)
 {
-	compressionFlag = (*data)[0];
+	compressionFlag = data[0];
 	state = PacketDataLength;
 	bytesToRead = 2;
 }
 
-void GBoyPrinter::PacketDataState(std::vector<int>* data)
+void GBoyPrinter::PacketDataState(std::vector<int>& data)
 {
-	
+	mainBuffer = data;
+	state = PacketChecksum;
 }
 
-void GBoyPrinter::PacketChecksumState(std::vector<int>* data)
+void GBoyPrinter::PacketChecksumState(std::vector<int>& data)
 {
-	
+	state = Keepalive;
 }
 
-void GBoyPrinter::KeepaliveState(std::vector<int>* data)
+void GBoyPrinter::KeepaliveState(std::vector<int>& data)
 {
-	
+	//Queue bits to send!
+	outputBuffer = {0,0,0,0, 0,0,0,1};
 }
 
-void GBoyPrinter::CurrentPrinterStatusState(std::vector<int>* data)
+void GBoyPrinter::CurrentPrinterStatusState(std::vector<int>& data)
 {
-	
+	//Is meant to be more complex but for now send nothing back.
+	outputBuffer = { 0,0,0,0, 0,0,0,0 };
 }
 
 //Input this input to the history and also check for the magic bytes.
@@ -224,4 +246,21 @@ void GBoyPrinter::Print(std::string toPrint)
 {
 	//Exists as I hate writing this...
 	std::cout << toPrint << std::endl;
+}
+
+uint16_t GBoyPrinter::reverseBits(uint16_t num)
+{
+	unsigned int count = 15;
+	uint16_t reverse_num = num;
+
+	num >>= 1;
+	while (num)
+	{
+		reverse_num <<= 1;
+		reverse_num |= num & 1;
+		num >>= 1;
+		count--;
+	}
+	reverse_num <<= count;
+	return reverse_num;
 }
