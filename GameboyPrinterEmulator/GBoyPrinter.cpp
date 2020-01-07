@@ -52,39 +52,40 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 					else
 					{
 						//Magic bytes were found soo keep reading bits, create int's out of them and give data to states.
-						if (bitsLeft > 0)
+						//Add and left shift in the bits read, when we finish we should have an 8bit number in an unsigned int.
+						std::cout << "# In pin was: " << inpinread << std::endl;
+						currentByteBuffer += inpinread;
+						bitsLeft--;
+						if(bitsLeft > 0)
 						{
-							//Add and left shift in the bits read, when we finish we should have an 8bit number in an unsigned int.
-							currentByteBuffer += inpinread;
-							bitsLeft--;
-							if(bitsLeft > 0) currentByteBuffer << 1;
+							currentByteBuffer << 1;
+						}
+						else
+						{
+							//We have read a whole byte!
+							readBytesBuffer.push_back(currentByteBuffer);
+							bytesRead++;
+							if (bytesRead == bytesToRead)
+							{
+								//Send all the bytes read to be processed.
+								ProcessBufferForState(state, readBytesBuffer);
+							}
 							else
 							{
-								//We have read a whole byte!
-								readBytesBuffer.push_back(currentByteBuffer);
-								bytesRead++;
-								if (bytesRead == bytesToRead)
-								{
-									//Send all the bytes read to be processed.
-									ProcessBufferForState(state, readBytesBuffer);
-								}
-								else
-								{
-									//Reset for reading another byte
-									currentByteBuffer = 0;
-									bitsLeft = ByteLength;
-								}
+								//Reset for reading another byte
+								currentByteBuffer = 0;
+								bitsLeft = ByteLength;
 							}
+						}
 
-							//Send any bits if we have any
-							if (outputBuffer.size() != 0)
-							{
-								gpioWrite(out, outputBuffer[0]);
-								outputBuffer.erase(outputBuffer.begin());
-							}
-							else {
-								gpioWrite(out, 0);
-							}
+						//Send any bits if we have any
+						if (outputBuffer.size() != 0)
+						{
+							gpioWrite(out, outputBuffer[0]);
+							outputBuffer.erase(outputBuffer.begin());
+						}
+						else {
+							gpioWrite(out, 0);
 						}
 					}
 				}
