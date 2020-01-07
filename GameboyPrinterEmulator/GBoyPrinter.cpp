@@ -155,7 +155,6 @@ void GBoyPrinter::PrinterCommandState(std::vector<int>& data)
 			break;
 		default:
 			Print("Unknown command for printer command state: " + command);
-			throw std::exception("Unknown command can't be handled");
 			break;
 	}
 	//Advance to next state.
