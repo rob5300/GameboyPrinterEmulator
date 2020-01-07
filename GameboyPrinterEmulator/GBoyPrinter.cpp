@@ -1,4 +1,5 @@
 #include "GBoyPrinter.h"
+#include <exception>
 
 GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 {	//17,22,27
@@ -68,6 +69,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 							if (bytesRead == bytesToRead)
 							{
 								//Send all the bytes read to be processed.
+								Print("Attempting to process state using buffered data.");
 								ProcessBufferForState(state, readBytesBuffer);
 							}
 							else
@@ -129,6 +131,7 @@ void GBoyPrinter::ProcessBufferForState(PrinterState& state, std::vector<int>& d
 //Process the data for the PrinterCommand state.
 void GBoyPrinter::PrinterCommandState(std::vector<int>& data)
 {
+	Print("PrinterCommand State checking...");
 	int command = data[0];
 	switch (command) {
 		case 1:
@@ -152,7 +155,8 @@ void GBoyPrinter::PrinterCommandState(std::vector<int>& data)
 			break;
 		default:
 			Print("Unknown command for printer command state: " + command);
-			exit(EXIT_FAILURE);
+			throw std::exception("Unknown command can't be handled");
+			break;
 	}
 	//Advance to next state.
 	state = CompressionFlag;
