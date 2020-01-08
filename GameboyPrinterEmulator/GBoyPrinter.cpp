@@ -72,12 +72,10 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 								Print("Attempting to process state using buffered data.");
 								ProcessBufferForState(state, readBytesBuffer);
 							}
-							else
-							{
-								//Reset for reading another byte
-								currentByteBuffer = 0;
-								bitsLeft = ByteLength;
-							}
+							
+							//Reset for reading another byte
+							currentByteBuffer = 0;
+							bitsLeft = ByteLength;
 						}
 
 						//Send any bits if we have any
