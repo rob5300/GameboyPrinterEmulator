@@ -200,7 +200,7 @@ void GBoyPrinter::PacketDataLengthState(vector<int>& data)
 	}
 	catch (exception e) {
 	    Print("PacketDataLength read failed due to: ");
-		Print(&e.what);
+		Print(e.what());
 	}
 }
 
