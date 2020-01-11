@@ -225,7 +225,7 @@ void GBoyPrinter::KeepaliveState(vector<int>& data)
 {
 	Print("Keep alive state");
 	//Queue bits to send!
-	outputBuffer = {1,0,0,0, 0,0,0,0};
+	outputBuffer = {1,0,0,0, 0,0,0,1}; //0x81
 	SetBytesToRead(1);
 	state = CurrentPrinterStatus;
 }
