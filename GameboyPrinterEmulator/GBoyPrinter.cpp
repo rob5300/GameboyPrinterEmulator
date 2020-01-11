@@ -83,7 +83,7 @@ void GBoyPrinter::PreMagicBytesLoop(int& in)
 	}
 }
 
-void GBoyPrinter::MainPacketStateLoop(int& in, vector<int>& readBytes)
+void GBoyPrinter::MainPacketStateLoop(int& in, vector<int>& readBuffer)
 {
 	//Magic bytes were found soo keep reading bits, create int's out of them and give data to states.
 	//Add and left shift in the bits read, when we finish we should have an 8bit number in an unsigned int.
@@ -97,14 +97,14 @@ void GBoyPrinter::MainPacketStateLoop(int& in, vector<int>& readBytes)
 	else
 	{
 		//We have read a whole byte!
-		readBytes.push_back(currentByteBuffer);
+		readBuffer.push_back(currentByteBuffer);
 		bytesRead++;
 		if (bytesRead == bytesToRead)
 		{
 			//Send all the bytes read to be processed.
 			Print("Attempting to process state using buffered data.");
-			ProcessBufferForState(state, readBytes);
-			readBytes.clear();
+			ProcessBufferForState(state, readBuffer);
+			readBuffer.clear();
 			bytesRead = 0;
 		}
 		else
