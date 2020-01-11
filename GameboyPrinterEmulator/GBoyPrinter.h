@@ -22,6 +22,7 @@ class GBoyPrinter
 		std::vector<int> history;
 		std::vector<int> mainBuffer;
 		std::vector<int> outputBuffer;
+		bool recievedMagicBytes = false;
 		const int historyMax = 16;
 		const int ByteLength = 8;
 		int bytesToRead = 0;

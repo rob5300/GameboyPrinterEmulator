@@ -13,7 +13,6 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 		gpioSetMode(in, PI_INPUT);//22
 		gpioSetMode(out, PI_OUTPUT);//27
 
-		bool magicBytesFound = false;
 		state = PrinterCommand;
 
 		while(true){
@@ -39,14 +38,15 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 					//If the pin state is not 0 then we can react to the current input value.
 					if (clockpinread == 0) continue;
 
-					if(!magicBytesFound)
+					if(!recievedMagicBytes)
 					{
 						//Keep looking for the magic bytes that signals the start of data from the Gameboy Camera.
 						cout << "In pin was: " << inpinread << endl;
-						magicBytesFound = ClockHigh_MagicBytesCheck(inpinread);
+						recievedMagicBytes = ClockHigh_MagicBytesCheck(inpinread);
 
-						if (magicBytesFound) {
+						if (recievedMagicBytes) {
 							//Prepare to read 1 byte for the PrinterCommand state.
+							state = PrinterCommand;
 							SetBytesToRead(1);
 							bytesRead = 0;
 							currentByteBuffer = 0;
@@ -187,7 +187,7 @@ void GBoyPrinter::PacketDataLengthState(vector<int>& data)
 		packetLength += data[1];
 
 		dataPacketLength = reverseBits(packetLength);
-		Print("Packet Length Read and reversed to be: " + dataPacketLength);
+		Print("Packet Length Read and reversed to be: " + to_string(dataPacketLength));
 		if (dataPacketLength != 0) {
 			state = PacketData;
 			SetBytesToRead(dataPacketLength);
@@ -207,25 +207,43 @@ void GBoyPrinter::PacketDataLengthState(vector<int>& data)
 
 void GBoyPrinter::PacketDataState(vector<int>& data)
 {
+	Print("Packet Data State. Will store bytes of length: " + to_string(data.size()));
 	mainBuffer = data;
 	state = PacketChecksum;
+	SetBytesToRead(2);
 }
 
 void GBoyPrinter::PacketChecksumState(vector<int>& data)
 {
+	Print("Packet Checksum check. This is skipped for now but still has to exist to accept the data.");
 	state = Keepalive;
+	SetBytesToRead(1);
 }
 
 void GBoyPrinter::KeepaliveState(vector<int>& data)
 {
+	Print("Keep alive state");
 	//Queue bits to send!
 	outputBuffer = {0,0,0,0, 0,0,0,1};
+	SetBytesToRead(1);
+	state = CurrentPrinterStatus;
 }
 
 void GBoyPrinter::CurrentPrinterStatusState(vector<int>& data)
 {
-	//Is meant to be more complex but for now send nothing back.
+	//State from: https://gbdev.gg8.se/wiki/articles/Gameboy_Printer#Status_byte
+	//Bit 7 	Low Battery 			Set when the voltage is below threshold
+	//Bit 6 	Other error
+	//Bit 5 	Paper jam 				Set when the encoder gives no pulses when the motor is powered
+	//Bit 4 	Packet error
+	//Bit 3 	Unprocessed data 		Set when there's unprocessed data in memory - AKA ready to print
+	//Bit 2 	Image data full
+	//Bit 1 	Currently printing 		Set as long as the printer's burnin' paper
+	//Bit 0		Checksum error 			Set when the calculated checksum doesn't match the received one
 	outputBuffer = { 0,0,0,0, 0,0,0,0 };
+	Print("Printer Status send state. Will currently send 0");
+	//We now need to go back to waiting for magic bytes and start over.
+	recievedMagicBytes = false;
 }
 
 void inline GBoyPrinter::SetBytesToRead(int num)
