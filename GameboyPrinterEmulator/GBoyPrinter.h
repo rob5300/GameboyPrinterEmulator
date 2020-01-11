@@ -19,7 +19,7 @@ class GBoyPrinter
 		void Print(std::string toPrint);
 		short int reverseBits(short int& num);
 		void PreMagicBytesLoop(int& in);
-		void MainPacketStateLoop(int& in, vector<int>& readBuffer);
+		void MainPacketStateLoop(int& in, std::vector<int>& readBuffer);
 
 		std::vector<int> history;
 		std::vector<int> mainBuffer;
