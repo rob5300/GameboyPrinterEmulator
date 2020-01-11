@@ -87,8 +87,9 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 						//Send any bits if we have any
 						if (outputBuffer.size() != 0)
 						{
+							Print("# [" + to_string(outputBuffer.size()) + "] Out Write was: " + to_string(outputBuffer[0]));
 							gpioWrite(out, outputBuffer[0]);
-							outputBuffer.erase(outputBuffer.begin());
+							outputBuffer.erase(outputBuffer.begin() + 0);
 						}
 						else {
 							gpioWrite(out, 0);
