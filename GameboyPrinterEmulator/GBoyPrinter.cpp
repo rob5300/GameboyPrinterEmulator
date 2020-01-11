@@ -178,7 +178,7 @@ void GBoyPrinter::PacketDataLengthState(vector<int>& data)
 {
 	try{
 		Print("PacketDataLength state...");
-		Print("Data input array length is: " + to_string(data.size));
+		Print("Data input array length is: " + to_string(data.size()));
 		//Then the 2 data bytes into a 16 bit number and reverse its bits.
 		uint16_t packetLength = 0;
 		packetLength += data[0];
