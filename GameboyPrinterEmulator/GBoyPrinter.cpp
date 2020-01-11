@@ -19,12 +19,9 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 			int lastClockRead = 0;
 			int lastInRead = 0;
 
-			int bytesRead = 0;
-
 			bitsLeft = ByteLength;
 
 			vector<int> readBytesBuffer;
-			unsigned int currentByteBuffer = 0;
 						
 			while (true)
 			{
@@ -36,54 +33,19 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 				{
 					lastClockRead = clockpinread;
 					//If the pin state is not 0 then we can react to the current input value.
-					if (clockpinread == 0) continue;
-
-					if(!recievedMagicBytes)
+					if (clockpinread == 1)
 					{
-						//Keep looking for the magic bytes that signals the start of data from the Gameboy Camera.
-						cout << "In pin was: " << inpinread << endl;
-						recievedMagicBytes = ClockHigh_MagicBytesCheck(inpinread);
-
-						if (recievedMagicBytes) {
-							//Prepare to read 1 byte for the PrinterCommand state.
-							state = PrinterCommand;
-							SetBytesToRead(1);
-							bytesRead = 0;
-							currentByteBuffer = 0;
+						if(!recievedMagicBytes)
+						{
+							PreMagicBytesLoop(inpinread);
+						}
+						else
+						{
+							MainPacketStateLoop(inpinread, readBytesBuffer);
 						}
 					}
 					else
 					{
-						//Magic bytes were found soo keep reading bits, create int's out of them and give data to states.
-						//Add and left shift in the bits read, when we finish we should have an 8bit number in an unsigned int.
-						cout << "# In pin was: " << inpinread << endl;
-						currentByteBuffer += inpinread;
-						bitsLeft--;
-						if(bitsLeft > 0)
-						{
-							currentByteBuffer << 1;
-						}
-						else
-						{
-							//We have read a whole byte!
-							readBytesBuffer.push_back(currentByteBuffer);
-							bytesRead++;
-							if (bytesRead == bytesToRead)
-							{
-								//Send all the bytes read to be processed.
-								Print("Attempting to process state using buffered data.");
-								ProcessBufferForState(state, readBytesBuffer);
-								readBytesBuffer.clear();
-								bytesRead = 0;
-							}
-							else
-							{
-								//Reset for reading another byte
-								bitsLeft = ByteLength;
-							}
-							currentByteBuffer = 0;
-						}
-
 						//Send any bits if we have any
 						if (outputBuffer.size() != 0)
 						{
@@ -91,7 +53,9 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 							gpioWrite(out, outputBuffer[0]);
 							outputBuffer.erase(outputBuffer.begin() + 0);
 						}
-						else {
+						else
+						{
+							//Write nothing.
 							gpioWrite(out, 0);
 						}
 					}
@@ -101,6 +65,54 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 	}
 	else {
 		Print("Failed to start gpio!");
+	}
+}
+
+void GBoyPrinter::PreMagicBytesLoop(int& in)
+{
+	//Keep looking for the magic bytes that signals the start of data from the Gameboy Camera.
+	cout << "In pin was: " << in << endl;
+	recievedMagicBytes = ClockHigh_MagicBytesCheck(in);
+
+	if (recievedMagicBytes) {
+		//Prepare to read 1 byte for the PrinterCommand state.
+		state = PrinterCommand;
+		SetBytesToRead(1);
+		bytesRead = 0;
+		currentByteBuffer = 0;
+	}
+}
+
+void GBoyPrinter::MainPacketStateLoop(int& in, vector<int>& readBytes)
+{
+	//Magic bytes were found soo keep reading bits, create int's out of them and give data to states.
+	//Add and left shift in the bits read, when we finish we should have an 8bit number in an unsigned int.
+	cout << "# In pin was: " << in << endl;
+	currentByteBuffer += in;
+	bitsLeft--;
+	if (bitsLeft > 0)
+	{
+		currentByteBuffer << 1;
+	}
+	else
+	{
+		//We have read a whole byte!
+		readBytes.push_back(currentByteBuffer);
+		bytesRead++;
+		if (bytesRead == bytesToRead)
+		{
+			//Send all the bytes read to be processed.
+			Print("Attempting to process state using buffered data.");
+			ProcessBufferForState(state, readBytes);
+			readBytes.clear();
+			bytesRead = 0;
+		}
+		else
+		{
+			//Reset for reading another byte
+			bitsLeft = ByteLength;
+		}
+		currentByteBuffer = 0;
 	}
 }
 

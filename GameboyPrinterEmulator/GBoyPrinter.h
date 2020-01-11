@@ -18,6 +18,8 @@ class GBoyPrinter
 		void ProcessBufferForState(PrinterState& state, std::vector<int>& data);
 		void Print(std::string toPrint);
 		short int reverseBits(short int& num);
+		void PreMagicBytesLoop(int& in);
+		void MainPacketStateLoop(int& in, vector<int>& readBuffer);
 
 		std::vector<int> history;
 		std::vector<int> mainBuffer;
@@ -30,6 +32,8 @@ class GBoyPrinter
 		int dataPacketLength = 0;
 		PrinterState state;
 		int bitsLeft = 0;
+		int bytesRead = 0;
+		unsigned int currentByteBuffer = 0;
 
 		//0x88 , 136, 0b 1000 1000
 		//0x33, 51, 0b 0011 0011
