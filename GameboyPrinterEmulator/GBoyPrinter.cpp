@@ -25,7 +25,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 			int bitsLeft = ByteLength;
 
 			vector<int> readBytesBuffer;
-			unsigned int currentByteBuffer;
+			unsigned int currentByteBuffer = 0;
 						
 			while (true)
 			{
@@ -48,8 +48,9 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 						if (magicBytesFound) {
 							//Prepare to read 1 byte for the PrinterCommand state.
 							bytesToRead = 1;
-							bitsLeft = ByteLength;
+							bitsLeft = ByteLength * bytesToRead;
 							bytesRead = 0;
+							currentByteBuffer = 0;
 						}
 					}
 					else
