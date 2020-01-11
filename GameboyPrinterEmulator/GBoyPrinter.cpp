@@ -73,6 +73,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 								//Send all the bytes read to be processed.
 								Print("Attempting to process state using buffered data.");
 								ProcessBufferForState(state, readBytesBuffer);
+								readBytesBuffer.clear();
 								bytesRead = 0;
 							}
 							else
@@ -180,7 +181,7 @@ void GBoyPrinter::PacketDataLengthState(vector<int>& data)
 		Print("PacketDataLength state...");
 		Print("Data input array length is: " + to_string(data.size()));
 		//Then the 2 data bytes into a 16 bit number and reverse its bits.
-		uint16_t packetLength = 0;
+		short int packetLength = 0;
 		packetLength += data[0];
 		packetLength << 8;
 		packetLength += data[1];
@@ -271,10 +272,10 @@ void GBoyPrinter::Print(string toPrint)
 	cout << toPrint << endl;
 }
 
-uint16_t GBoyPrinter::reverseBits(uint16_t& num)
+short int GBoyPrinter::reverseBits(short int& num)
 {
-	unsigned int count = 15;
-	uint16_t reverse_num = num;
+	unsigned int count = 16;
+	short int reverse_num = num;
 
 	num >>= 1;
 	while (num)
