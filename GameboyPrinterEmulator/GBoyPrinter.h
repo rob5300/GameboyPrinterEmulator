@@ -17,7 +17,7 @@ class GBoyPrinter
 		double CountSeconds(std::chrono::time_point<std::chrono::high_resolution_clock> begin);
 		void ProcessBufferForState(PrinterState& state, std::vector<int>& data);
 		void Print(std::string toPrint);
-		uint16_t reverseBits(uint16_t num);
+		uint16_t reverseBits(uint16_t& num);
 
 		std::vector<int> history;
 		std::vector<int> mainBuffer;

@@ -176,24 +176,31 @@ void GBoyPrinter::CompressionFlagState(vector<int>& data)
 
 void GBoyPrinter::PacketDataLengthState(vector<int>& data)
 {
-	Print("PacketDataLength.");
-	//Then the 2 data bytes into a 16 bit number and reverse its bits.
-	uint16_t packetLength = 0;
-	packetLength += data[0];
-	packetLength << 8;
-	packetLength += data[1];
+	try{
+		Print("PacketDataLength state...");
+		Print("Data input array length is: " + to_string(data.size));
+		//Then the 2 data bytes into a 16 bit number and reverse its bits.
+		uint16_t packetLength = 0;
+		packetLength += data[0];
+		packetLength << 8;
+		packetLength += data[1];
 
-	dataPacketLength = reverseBits(packetLength);
-	Print("Packet Length Read and reversed to be: " + dataPacketLength);
-	if (dataPacketLength != 0) {
-		state = PacketData;
-		SetBytesToRead(dataPacketLength);
+		dataPacketLength = reverseBits(packetLength);
+		Print("Packet Length Read and reversed to be: " + dataPacketLength);
+		if (dataPacketLength != 0) {
+			state = PacketData;
+			SetBytesToRead(dataPacketLength);
+		}
+		else
+		{
+			//Skip the data packet part?
+			state = PacketChecksum;
+			SetBytesToRead(2);
+		}
 	}
-	else
-	{
-		//Skip the data packet part?
-		state = PacketChecksum;
-		SetBytesToRead(2);
+	catch (exception e) {
+	    Print("PacketDataLength read failed due to: ");
+		Print(&e.what);
 	}
 }
 
@@ -264,7 +271,7 @@ void GBoyPrinter::Print(string toPrint)
 	cout << toPrint << endl;
 }
 
-uint16_t GBoyPrinter::reverseBits(uint16_t num)
+uint16_t GBoyPrinter::reverseBits(uint16_t& num)
 {
 	unsigned int count = 15;
 	uint16_t reverse_num = num;
