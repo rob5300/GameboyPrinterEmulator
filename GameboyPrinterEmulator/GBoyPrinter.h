@@ -28,6 +28,7 @@ class GBoyPrinter
 		int compressionFlag = 0;
 		int dataPacketLength = 0;
 		PrinterState state;
+		int bitsLeft = 0;
 
 		//0x88 , 136, 0b 1000 1000
 		//0x33, 51, 0b 0011 0011
@@ -45,4 +46,5 @@ class GBoyPrinter
 		void PacketChecksumState(std::vector<int>& data);
 		void KeepaliveState(std::vector<int>& data);
 		void CurrentPrinterStatusState(std::vector<int>& data);
+		void SetBytesToRead(int num);
 };

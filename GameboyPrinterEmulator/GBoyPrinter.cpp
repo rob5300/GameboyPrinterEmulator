@@ -22,7 +22,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 
 			int bytesRead = 0;
 
-			int bitsLeft = ByteLength;
+			bitsLeft = ByteLength;
 
 			vector<int> readBytesBuffer;
 			unsigned int currentByteBuffer = 0;
@@ -47,8 +47,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 
 						if (magicBytesFound) {
 							//Prepare to read 1 byte for the PrinterCommand state.
-							bytesToRead = 1;
-							bitsLeft = ByteLength * bytesToRead;
+							SetBytesToRead(1);
 							bytesRead = 0;
 							currentByteBuffer = 0;
 						}
@@ -74,11 +73,14 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 								//Send all the bytes read to be processed.
 								Print("Attempting to process state using buffered data.");
 								ProcessBufferForState(state, readBytesBuffer);
+								bytesRead = 0;
 							}
-							
-							//Reset for reading another byte
+							else
+							{
+								//Reset for reading another byte
+								bitsLeft = ByteLength;
+							}
 							currentByteBuffer = 0;
-							bitsLeft = ByteLength;
 						}
 
 						//Send any bits if we have any
@@ -161,7 +163,15 @@ void GBoyPrinter::PrinterCommandState(vector<int>& data)
 	}
 	//Advance to next state.
 	state = CompressionFlag;
-	bytesToRead = 1;
+	SetBytesToRead(1);
+}
+
+void GBoyPrinter::CompressionFlagState(vector<int>& data)
+{
+	compressionFlag = data[0];
+	Print("Compression flag state: Read flag as: " + to_string(compressionFlag));
+	state = PacketDataLength;
+	SetBytesToRead(2);
 }
 
 void GBoyPrinter::PacketDataLengthState(vector<int>& data)
@@ -177,20 +187,14 @@ void GBoyPrinter::PacketDataLengthState(vector<int>& data)
 	Print("Packet Length Read and reversed to be: " + dataPacketLength);
 	if (dataPacketLength != 0) {
 		state = PacketData;
-		bytesToRead = dataPacketLength;
+		SetBytesToRead(dataPacketLength);
 	}
 	else
 	{
 		//Skip the data packet part?
 		state = PacketChecksum;
+		SetBytesToRead(2);
 	}
-}
-
-void GBoyPrinter::CompressionFlagState(vector<int>& data)
-{
-	compressionFlag = data[0];
-	state = PacketDataLength;
-	bytesToRead = 2;
 }
 
 void GBoyPrinter::PacketDataState(vector<int>& data)
@@ -214,6 +218,12 @@ void GBoyPrinter::CurrentPrinterStatusState(vector<int>& data)
 {
 	//Is meant to be more complex but for now send nothing back.
 	outputBuffer = { 0,0,0,0, 0,0,0,0 };
+}
+
+void inline GBoyPrinter::SetBytesToRead(int num)
+{
+	bytesToRead = num;
+	bitsLeft = ByteLength;
 }
 
 //Input this input to the history and also check for the magic bytes.
