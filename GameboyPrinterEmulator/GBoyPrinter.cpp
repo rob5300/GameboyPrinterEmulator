@@ -1,6 +1,8 @@
 #include "GBoyPrinter.h"
 #include <exception>
 
+using namespace std;
+
 GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 {	//17,22,27
 	if (gpioInitialise() >= 0)
@@ -22,7 +24,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 
 			int bitsLeft = ByteLength;
 
-			std::vector<int> readBytesBuffer;
+			vector<int> readBytesBuffer;
 			unsigned int currentByteBuffer;
 						
 			while (true)
@@ -40,7 +42,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 					if(!magicBytesFound)
 					{
 						//Keep looking for the magic bytes that signals the start of data from the Gameboy Camera.
-						std::cout << "In pin was: " << inpinread << std::endl;
+						cout << "In pin was: " << inpinread << endl;
 						magicBytesFound = ClockHigh_MagicBytesCheck(inpinread);
 
 						if (magicBytesFound) {
@@ -54,7 +56,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 					{
 						//Magic bytes were found soo keep reading bits, create int's out of them and give data to states.
 						//Add and left shift in the bits read, when we finish we should have an 8bit number in an unsigned int.
-						std::cout << "# In pin was: " << inpinread << std::endl;
+						cout << "# In pin was: " << inpinread << endl;
 						currentByteBuffer += inpinread;
 						bitsLeft--;
 						if(bitsLeft > 0)
@@ -98,7 +100,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 }
 
 //React to the recieved data depending on the current state.
-void GBoyPrinter::ProcessBufferForState(PrinterState& state, std::vector<int>& data)
+void GBoyPrinter::ProcessBufferForState(PrinterState& state, vector<int>& data)
 {
 	switch (state)
 	{
@@ -127,7 +129,7 @@ void GBoyPrinter::ProcessBufferForState(PrinterState& state, std::vector<int>& d
 }
 
 //Process the data for the PrinterCommand state.
-void GBoyPrinter::PrinterCommandState(std::vector<int>& data)
+void GBoyPrinter::PrinterCommandState(vector<int>& data)
 {
 	Print("PrinterCommand State checking...");
 	int command = data[0];
@@ -152,7 +154,8 @@ void GBoyPrinter::PrinterCommandState(std::vector<int>& data)
 			//Gameboy wants our status, lets reply with it.
 			break;
 		default:
-			Print("Unknown command for printer command state: " + command);
+			string message = "Unknown command for printer command state: " + to_string(command);
+			Print(message);
 			break;
 	}
 	//Advance to next state.
@@ -160,7 +163,7 @@ void GBoyPrinter::PrinterCommandState(std::vector<int>& data)
 	bytesToRead = 1;
 }
 
-void GBoyPrinter::PacketDataLengthState(std::vector<int>& data)
+void GBoyPrinter::PacketDataLengthState(vector<int>& data)
 {
 	Print("PacketDataLength.");
 	//Then the 2 data bytes into a 16 bit number and reverse its bits.
@@ -182,31 +185,31 @@ void GBoyPrinter::PacketDataLengthState(std::vector<int>& data)
 	}
 }
 
-void GBoyPrinter::CompressionFlagState(std::vector<int>& data)
+void GBoyPrinter::CompressionFlagState(vector<int>& data)
 {
 	compressionFlag = data[0];
 	state = PacketDataLength;
 	bytesToRead = 2;
 }
 
-void GBoyPrinter::PacketDataState(std::vector<int>& data)
+void GBoyPrinter::PacketDataState(vector<int>& data)
 {
 	mainBuffer = data;
 	state = PacketChecksum;
 }
 
-void GBoyPrinter::PacketChecksumState(std::vector<int>& data)
+void GBoyPrinter::PacketChecksumState(vector<int>& data)
 {
 	state = Keepalive;
 }
 
-void GBoyPrinter::KeepaliveState(std::vector<int>& data)
+void GBoyPrinter::KeepaliveState(vector<int>& data)
 {
 	//Queue bits to send!
 	outputBuffer = {0,0,0,0, 0,0,0,1};
 }
 
-void GBoyPrinter::CurrentPrinterStatusState(std::vector<int>& data)
+void GBoyPrinter::CurrentPrinterStatusState(vector<int>& data)
 {
 	//Is meant to be more complex but for now send nothing back.
 	outputBuffer = { 0,0,0,0, 0,0,0,0 };
@@ -237,17 +240,17 @@ bool GBoyPrinter::ClockHigh_MagicBytesCheck(int in)
 	return false;
 }
 
-double GBoyPrinter::CountSeconds(std::chrono::time_point<std::chrono::high_resolution_clock> begin)
+double GBoyPrinter::CountSeconds(chrono::time_point<chrono::high_resolution_clock> begin)
 {
-	std::chrono::duration<double, std::milli> seconds = std::chrono::high_resolution_clock::now() - begin;
+	chrono::duration<double, milli> seconds = chrono::high_resolution_clock::now() - begin;
 	return seconds.count();
 }
 
 //Print to the standard output.
-void GBoyPrinter::Print(std::string toPrint)
+void GBoyPrinter::Print(string toPrint)
 {
 	//Exists as I hate writing this...
-	std::cout << toPrint << std::endl;
+	cout << toPrint << endl;
 }
 
 uint16_t GBoyPrinter::reverseBits(uint16_t num)
