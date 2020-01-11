@@ -231,14 +231,17 @@ void GBoyPrinter::PacketChecksumState(vector<int>& data)
 	Print("Packet Checksum check. This is skipped for now but still has to exist to accept the data.");
 	state = Keepalive;
 	SetBytesToRead(1);
+	Print("Set bytes to send for keep alive state that is upcoming now.");
+	outputBuffer = { 1,0,0,0, 0,0,0,1 }; //0x81
 }
 
 void GBoyPrinter::KeepaliveState(vector<int>& data)
 {
 	Print("Keep alive state");
 	//Queue bits to send!
-	outputBuffer = {1,0,0,0, 0,0,0,1}; //0x81
 	SetBytesToRead(1);
+	//Set printer status data now.
+	outputBuffer = { 0,0,0,0, 0,0,0,0 };
 	state = CurrentPrinterStatus;
 }
 
@@ -253,7 +256,7 @@ void GBoyPrinter::CurrentPrinterStatusState(vector<int>& data)
 	//Bit 2 	Image data full
 	//Bit 1 	Currently printing 		Set as long as the printer's burnin' paper
 	//Bit 0		Checksum error 			Set when the calculated checksum doesn't match the received one
-	outputBuffer = { 0,0,0,0, 0,0,0,0 };
+	
 	Print("Printer Status send state. Will currently send 0");
 	//We now need to go back to waiting for magic bytes and start over.
 	recievedMagicBytes = false;
