@@ -35,6 +35,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 					//If the pin state is not 0 then we can react to the current input value.
 					if (clockpinread == 1)
 					{
+						//lastHighPinReadTime = &chrono::high_resolution_clock::now();
 						if(!recievedMagicBytes)
 						{
 							PreMagicBytesLoop(inpinread);
@@ -239,7 +240,7 @@ void GBoyPrinter::KeepaliveState(vector<int>& data)
 	//Queue bits to send!
 	SetBytesToRead(1);
 	//Set printer status data now.
-	outputBuffer = { 0,0,0,0, 0,0,0,0 };
+	outputBuffer = { 0,0,0,0, 1,0,0,0 };
 	state = CurrentPrinterStatus;
 }
 

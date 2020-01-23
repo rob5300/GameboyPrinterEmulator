@@ -35,6 +35,8 @@ class GBoyPrinter
 		int bytesRead = 0;
 		unsigned int currentByteBuffer = 0;
 
+		std::chrono::time_point<chrono::high_resolution_clock>* lastHighPinReadTime;
+
 		//0x88 , 136, 0b 1000 1000
 		//0x33, 51, 0b 0011 0011
 		//Sent in MSB first.
