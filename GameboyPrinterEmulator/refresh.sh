@@ -1,7 +1,7 @@
 #!/bin/bash
 
 git reset --hard
-git pull
+git pull origin reply
 rm main
 make
 sudo ./main
