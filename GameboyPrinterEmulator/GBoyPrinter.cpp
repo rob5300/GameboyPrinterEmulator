@@ -43,9 +43,7 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 						{
 							MainPacketStateLoop(inpinread, readBytesBuffer);
 						}
-					}
-					else
-					{
+
 						//Send any bits if we have any
 						if (outputBuffer.size() != 0)
 						{
