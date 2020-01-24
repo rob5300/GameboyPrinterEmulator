@@ -240,7 +240,7 @@ void GBoyPrinter::KeepaliveState(vector<int>& data)
 	//Queue bits to send!
 	SetBytesToRead(1);
 	//Set printer status data now.
-	outputBuffer = { 0,0,0,1, 0,0,0,0 };
+	outputBuffer = { 0,0,0,0, 0,0,0,0 };
 	state = CurrentPrinterStatus;
 }
 
