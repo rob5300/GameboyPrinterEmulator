@@ -13,6 +13,9 @@ GBoyPrinter::GBoyPrinter(int clockpin, int in, int out)
 		gpioSetMode(in, PI_INPUT);//22
 		gpioSetMode(out, PI_OUTPUT);//27
 
+		//Set outpin to zero now.
+		gpioWrite(out, 0);
+
 		state = PrinterCommand;
 
 		while(true){
